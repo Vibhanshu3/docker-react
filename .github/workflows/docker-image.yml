@@ -14,7 +14,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Build the dev docker image
       run: docker build -t docker-react -f Dockerfile.dev .
     - name: Running the dev docker image
       run: docker run -e CI=true docker-react npm run test
+
+    - name: Generate deployment package
+      run: zip -r deploy.zip . -x '*.git*'
+
+    - name: Deploy to EB
+      uses: einaregilsson/beanstalk-deploy@v21
+      with:
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        application_name: docker-react
+        environment_name: Docker-react-env
+        version_label: 12345
+        region: ap-south-1
+        deployment_package: deploy.zip
